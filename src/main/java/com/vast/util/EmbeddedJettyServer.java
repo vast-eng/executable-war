@@ -2,10 +2,12 @@ package com.vast.util;
 
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.webapp.WebAppContext;
+import org.eclipse.jetty.xml.XmlConfiguration;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
+import java.io.File;
 import java.net.URL;
 import java.security.ProtectionDomain;
 
@@ -14,7 +16,12 @@ import java.security.ProtectionDomain;
  */
 public class EmbeddedJettyServer {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
+
+        if(args.length > 1 && args[0].equals("-?")) {
+            usage();
+            System.exit(0);
+        }
 
         //probably want to find a better place to put this.
         // Optionally remove existing handlers attached to j.u.l root logger
@@ -25,12 +32,18 @@ public class EmbeddedJettyServer {
         SLF4JBridgeHandler.install();
 
         Server server = new Server();
-        ServerConnector connector = new ServerConnector(server);
 
-        // Set some timeout options to make debugging easier.
-        connector.setIdleTimeout(1000 * 60 * 60);
-        connector.setPort(8081);
-        server.setConnectors(new Connector[]{connector});
+        if(args.length > 0) {
+            //if there's an explicit jetty.xml, use it
+            String jettyXmlFile = args[0];
+            XmlConfiguration configuration = new XmlConfiguration(new File(jettyXmlFile).toURL());
+            configuration.configure(server);
+        } else {
+            //otherwise just go with reasonable defaults
+            SelectChannelConnector connector = new SelectChannelConnector();
+            connector.setPort(8080);
+            server.setConnectors(new Connector[]{connector});
+        }
 
         WebAppContext context = new WebAppContext();
         context.setServer(server);
@@ -40,7 +53,6 @@ public class EmbeddedJettyServer {
         context.addSystemClass("org.apache.log4j.");
         context.addSystemClass("org.slf4j.");
         context.addSystemClass("org.apache.commons.logging.");
-
 
         ProtectionDomain protectionDomain = EmbeddedJettyServer.class.getProtectionDomain();
         URL location = protectionDomain.getCodeSource().getLocation();
@@ -55,4 +67,12 @@ public class EmbeddedJettyServer {
             System.exit(100);
         }
     }
+
+    private static void usage() {
+        System.out.println("==================================================");
+        System.out.println("   Usage ---  ");
+        System.out.println(" java -jar your_war_file <optional_jetty.xml>");
+        System.out.println("==================================================");
+    }
+
 }
