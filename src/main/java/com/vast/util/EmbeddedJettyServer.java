@@ -70,7 +70,7 @@ public class EmbeddedJettyServer {
             server.join();
         } catch (Exception e) {
             e.printStackTrace();
-            System.exit(100);
+            System.exit(-1);
         }
     }
 
