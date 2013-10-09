@@ -11,7 +11,7 @@ Add the following as a dependency to your project -
 <dependency>
     <groupId>com.vast.common</groupId>
     <artifactId>executable-war</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <!-- use provided scope -->
     <scope>provided</scope>
 </dependency>
